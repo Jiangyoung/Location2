@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Location2</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="checkpower">查看内容</string>
+    <string name="get_locinfo_succ">获取位置信息成功</string>
+    <string name="get_locinfo_failed">获取位置信息失败</string>
+    <string name="send_loc_success">位置信息发送成功</string>
+    <string name="send_loc_failed">位置信息发送失败</string>
+    <string name="location_map_path">http://1.jiangyounglocation.sinaapp.com/demo1.html</string>
+    <string name="title_activity_file_view">FileViewActivity</string>
+
+</resources>
