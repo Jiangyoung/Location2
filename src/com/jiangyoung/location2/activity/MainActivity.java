@@ -1,9 +1,6 @@
 package com.jiangyoung.location2.activity;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,18 +12,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.location.Location;
-import android.location.LocationListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
-
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,14 +49,14 @@ public class MainActivity extends Activity {
 	private Button startCheck;
 
 	private TextView textView1;
-	private Button tof;
 	
 	private Handler handler = new Handler(){
 		public void handleMessage(android.os.Message msg) {
 			switch(msg.what){
 			
 			case StatusID.GET_LOCINFO_FAILED:
-				Toast.makeText(MainActivity.this, getString(R.string.send_loc_success), 0).show();
+				mDialog.cancel();
+				Toast.makeText(MainActivity.this, getString(R.string.send_loc_success),Toast.LENGTH_SHORT).show();
 				break;
 			case StatusID.GET_LOCINFO_SUCC:
 				
@@ -78,15 +73,37 @@ public class MainActivity extends Activity {
 				break;
 			case StatusID.REQUEST_POWINFO_SUCC:
 				mDialog.cancel();
-				
-				textView1.setText(msg.obj.toString());
+				String reqResult = msg.obj.toString();
+				try {
+					JSONObject jsonObject = new JSONObject(reqResult);
+					int isValid = jsonObject.getInt("isvalid");
+					
+					if(StatusID.POWER_ISVALID == isValid){
+						Toast.makeText(MainActivity.this, getString(R.string.power_isvalid), Toast.LENGTH_SHORT).show();
+						//取得token
+						String token = jsonObject.getString("token");
+						//跳转到FileList页面
+						Intent toFileList = new Intent();
+						toFileList.putExtra("token",token);
+						toFileList.setClass(MainActivity.this, FileViewActivity.class);
+						startActivity(toFileList);
+						
+					}else{
+						Toast.makeText(MainActivity.this, getString(R.string.power_invalid), Toast.LENGTH_SHORT).show();
+					}
+				} catch (Exception e) {
+					
+					//Toast.makeText(MainActivity.this, getString(R.string.parse_json_failed), Toast.LENGTH_SHORT).show();
+				}
 				
 				break;
 			case StatusID.REQUEST_POWINFO_FAILED:
-				Toast.makeText(MainActivity.this, getString(R.string.send_loc_failed), 0).show();
+				mDialog.cancel();
+				Toast.makeText(MainActivity.this, getString(R.string.send_loc_failed), Toast.LENGTH_SHORT).show();
 				break;
 			default:
-				Toast.makeText(MainActivity.this, "意料之外的错误", 0).show();
+				mDialog.cancel();
+				Toast.makeText(MainActivity.this, "意料之外的错误", Toast.LENGTH_SHORT).show();
 			}
 		}
 		
@@ -111,7 +128,7 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				//Toast.makeText(MainActivity.this, "OnClick", 0).show();
+				//Toast.makeText(MainActivity.this, "OnClick", Toast.LENGTH_SHORT).show();
 				
 				InitLocation();
 				
@@ -120,9 +137,7 @@ public class MainActivity extends Activity {
 				mDialog.setMessage("马上就好...");
 				mDialog.show();
 				
-				mLocationClient.start();
-				startCheck.setVisibility(android.view.View.GONE);
-				
+				mLocationClient.start();				
 								
 				/*
 				int res = mLocationClient.requestLocation();
@@ -216,8 +231,6 @@ public class MainActivity extends Activity {
 		new Thread(){			
 			public void run(){
 				try {
-					
-					
 					String result = "";
 			        //1获取到一个浏览器
 			        HttpClient client = new DefaultHttpClient();

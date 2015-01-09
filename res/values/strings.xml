@@ -9,6 +9,13 @@
     <string name="get_locinfo_failed">获取位置信息失败</string>
     <string name="send_loc_success">位置信息发送成功</string>
     <string name="send_loc_failed">位置信息发送失败</string>
+    <string name="parse_json_failed">解析json数据失败</string>
+    <string name="power_isvalid">有操作权限</string>
+    <string name="power_invalid">无操作权限</string>
+    <string name="btn_exit">安全退出</string>
+    <string name="get_list_succ">获取列表成功</string>
+    <string name="get_list_failed">获取列表失败</string>
+    <string name="pull_xml_failed">解析xml数据失败</string>
     <string name="location_map_path">http://1.jiangyounglocation.sinaapp.com/demo1.html</string>
     <string name="title_activity_file_view">FileViewActivity</string>
 
