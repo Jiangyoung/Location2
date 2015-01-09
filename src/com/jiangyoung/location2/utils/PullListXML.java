@@ -15,7 +15,11 @@ import com.jiangyoung.location2.resource.Dir;
 import com.jiangyoung.location2.resource.File;
 
 public class PullListXML {
-
+	/**
+	 * 
+	 * 解析InputStream格式的xml数据
+	 * 返回对象ContentList list
+	 * /
 	public static ContentList getContentList(InputStream xml) throws Exception {
 		ContentList list = null;
 		List<Dir> dirs = null;
