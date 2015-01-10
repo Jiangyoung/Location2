@@ -39,32 +39,65 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/*
+ * 
+ * 1、接收从主页面传过来的token
+ * 2、通过token请求列表信息
+ * 
+ * 3、收到返回的列表信息 解析并按格式显示出来
+ * 
+ */
+
 public class FileViewActivity extends Activity {
 	private TextView textview;
 	private ListView listview;
 	private Button btn_exit;
 	private SimpleAdapter simpleAdapter;
 	
-	
+	//适配器参数
 	private List<Map<String,Object>> list;
 	private Map<String,Object> map;
 	
+	/**
+	 * ProgressDialog
+	 */
 	private ProgressDialog mDialog;
-	
+	/**
+	 * 认证号
+	 */
 	private String token = "";
-	private String prevDir = null;
-	private String requestDir = null;
+	/**
+	 * 当前要请求的目录名
+	 */
+	private String requestDir = "";
+	/**
+	 * 记录之前请求的目录名
+	 */
+	private String prevDir = "";
+	/**
+	 * 获取列表的地址链接
+	 */
 	private final String requestListPath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=5";
+	/**
+	 * 安全退出链接
+	 */
 	private final String quitPath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=6";
 	
+	/**
+	 * 用于接收线程执行返回的信息并做出对应操作
+	 */
 	private Handler handler = new Handler(){
+		
 		public void handleMessage(android.os.Message msg) {
 			switch(msg.what){
 			case StatusID.GET_LIST_SUCC:
+				mDialog.cancel();
+				
+				//获取操作权限后 开始计时 限制操作时间
 				new Thread(){
 					public void run() {
 						try {
-							this.sleep(StatusID.PERIOD_VALID);
+							Thread.sleep(StatusID.PERIOD_VALID);
 							Message msg = Message.obtain();
 							msg.what = StatusID.NEED_REVALID;
 							handler.sendMessage(msg);
@@ -74,13 +107,12 @@ public class FileViewActivity extends Activity {
 						}
 					};
 				}.start();
-				mDialog.cancel();
-				String res = msg.obj.toString();
 				
+				String res = msg.obj.toString();
+				//把字符串转换为 输入流
 				InputStream is = new ByteArrayInputStream(res.getBytes());
 				
 				ContentList contentList = new ContentList();
-				
 				
 				try {
 					contentList = PullListXML.getContentList(is);
@@ -88,7 +120,7 @@ public class FileViewActivity extends Activity {
 					textview.setText("目录"+contentList.getDirNum()+"个，文件"+contentList.getFileNum()+"个.");
 					
 					list = new ArrayList<Map<String,Object>>();	
-					if(requestDir!=null){
+					if(!requestDir.isEmpty()){
 						map = new HashMap<String,Object>();						
 						map.put("name", "..");
 						map.put("info", "上级目录");
@@ -123,23 +155,25 @@ public class FileViewActivity extends Activity {
 							list.add(map);
 						}
 					}
-
+					//配置适配器
 					simpleAdapter = new SimpleAdapter(FileViewActivity.this,list,
 							android.R.layout.simple_list_item_2,
 							new String[]{"name","info"},
 							new int[]{android.R.id.text1,
 							android.R.id.text2});					
-					listview.setAdapter(simpleAdapter);					
+					//把解析完成的xml通过 适配器 放入listview中
+					listview.setAdapter(simpleAdapter);		
+					//对listview添加点击事件监听
 					OnItemClickListener(listview);
 					
 				} catch (Exception e) {
-					Toast.makeText(FileViewActivity.this,R.string.pull_xml_failed, Toast.LENGTH_SHORT).show();
+					myToast(getString(R.string.pull_xml_failed));
 				}
 			
 				break;
 			case StatusID.GET_LIST_FAILED:
 				mDialog.cancel();
-				Toast.makeText(FileViewActivity.this,R.string.get_list_failed, Toast.LENGTH_SHORT).show();
+				myToast(getString(R.string.get_list_failed));
 				break;
 			case StatusID.ABANDON_TOKEN_SUCC:
 				mDialog.cancel();
@@ -147,14 +181,14 @@ public class FileViewActivity extends Activity {
 				break;
 			case StatusID.ABANDON_TOKEN_FAILED:
 				mDialog.cancel();
-				Toast.makeText(FileViewActivity.this, "意料之外的错误", Toast.LENGTH_SHORT).show();
+				myToast( "意料之外的错误");
 				break;
 			case StatusID.NEED_REVALID:
 				FileViewActivity.this.finish();
 				break;
 			default:
 				mDialog.cancel();
-				Toast.makeText(FileViewActivity.this, "意料之外的错误", Toast.LENGTH_SHORT).show();
+				myToast( "意料之外的错误");
 			}
 		};
 	};
@@ -165,7 +199,6 @@ public class FileViewActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_file_view);
 		
-		
 		textview = (TextView)findViewById(R.id.textview);
 		listview = (ListView)findViewById(R.id.listview);
 		btn_exit = (Button)findViewById(R.id.safetyexit);
@@ -174,7 +207,6 @@ public class FileViewActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				abandonToken();
-				
 			}			
 		});
 		
@@ -251,7 +283,6 @@ public class FileViewActivity extends Activity {
 		            //键值对  NameValuePair
 		            List<NameValuePair> params = new ArrayList<NameValuePair>();
 		            
-		            
 		            params.add(new BasicNameValuePair("token",token));
 		            params.add(new BasicNameValuePair("dir",requestDir));
 		            
@@ -294,31 +325,50 @@ public class FileViewActivity extends Activity {
 				//取得对应map中的值 例 {cate=file,info=xxx,name=pic}
 				String itemInfoString = arg0.getAdapter().getItem(arg2).toString();
 				//通过 , 截取成数组
-				//arr[0] ="{cate=file"   arr[1] ="info=xxx"     arr[2] ="name=pic"
+				//arr[0] ="{cate=file"   arr[1] ="info=文件 | xxx"     arr[2] ="name=pic}"
 				String[] itemInfoArr = itemInfoString.split(",");
 				
 				String cate = itemInfoArr[0].substring(itemInfoArr[0].indexOf("=")+1);
 				
 				if(cate.equals("dir")){
 					
-					requestDir = itemInfoArr[2].substring(itemInfoArr[2].indexOf("=")+1,itemInfoArr[2].indexOf("}"));
-					if(requestDir.equals("..")){
-						requestDir = prevDir;
-						prevDir = requestDir;
+					//从字符串截取出 dirName  
+					String dirName = itemInfoArr[2].substring(itemInfoArr[2].indexOf("=")+1,itemInfoArr[2].indexOf("}"));
+					
+					//  .. 意为返回上层目录     与目录同类型
+					if(dirName.equals("..")){
+						try{
+							requestDir = prevDir.substring(0, prevDir.indexOf("/"));
+						}catch(Exception e){
+							requestDir = "";
+						}
+						
+					}else{
+						// eg: itemInfoArr[1] = "info=目录 | dirName1/dirName2/";
+						requestDir = itemInfoArr[1].substring(itemInfoArr[1].indexOf("|")+2);
+						
+						requestDir = requestDir.substring(0,requestDir.length()-1);
 					}
-					//Toast.makeText(FileViewActivity.this,requestDir,Toast.LENGTH_SHORT).show();
+					
+					//myToast(requestDir);
+					prevDir = requestDir;
 					requestListContent();
 				}else if(cate.equals("file")){
 					//Intent toDownFile = new Intent();
-					Toast.makeText(FileViewActivity.this,"cooming soon.",Toast.LENGTH_SHORT).show();
+					myToast("cooming soon.");
 				}else{
-					Toast.makeText(FileViewActivity.this,"未识别",Toast.LENGTH_SHORT).show();
+					myToast("未识别");
 				}
 				
 			}
 		});
 		
 	}
-	
+	private void myToast(String msg){
+		Toast.makeText(FileViewActivity.this, msg,Toast.LENGTH_SHORT).show();
+	}
+	private void myToast(String msg,int duration){
+		Toast.makeText(FileViewActivity.this, msg,duration).show();
+	}
 	
 }

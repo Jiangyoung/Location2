@@ -32,31 +32,62 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
 import com.jiangyoung.location2.R;
 import com.jiangyoung.location2.resource.*;
-import com.jiangyoung.location2.utils.Locinfo;
+import com.jiangyoung.location2.utils.MD5;
 
 
+
+/*
+ * 
+ * 1、定位  获取位置信息
+ * 2、将位置信息发送到服务器    
+ *   位置信息数据+md5（位置信息数据+MY_KEY）
+ *   用于确实数据来源于知道MY_KEY的地方
+ *   
+ *   服务器收到数据先认证 再 确认权限信息
+ *   
+ * 3、收到返回的 用于请求列表的 权限信息  
+ *   弱有权限操作则附带返回 用于获取列表的 token
+ *   token = md5（位置信息数据+MY_KEY+0）
+ *   用于确实数据来源于知道MY_KEY的地方
+ * 4、若有操作权限 跳转到显示列表的Activity 并将 token 传过去
+ * 
+ */
 
 
 public class MainActivity extends Activity {
 	
 	public LocationClient mLocationClient = null;
 	public BDLocationListener myListener = new MyLocationListener();
+	/**
+	 * 上传位置信息地址链接
+	 */
 	private String receivePath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=1";
+	
 	private Locinfo locInfo;
 	
 	private ProgressDialog mDialog;
 	
 	private Button startCheck;
-
 	private TextView textView1;
 	
+	/**
+	 * 接收从服务器返回的认证号
+	 */
+	private String tokenFromServer = "";
+	/**
+	 * 本地计算的认证号
+	 */
+	private String tokenClientCalc = "";
+	/**
+	 * 用于接收线程执行返回的信息并做出对应操作
+	 */
 	private Handler handler = new Handler(){
 		public void handleMessage(android.os.Message msg) {
 			switch(msg.what){
 			
 			case StatusID.GET_LOCINFO_FAILED:
 				mDialog.cancel();
-				Toast.makeText(MainActivity.this, getString(R.string.send_loc_success),Toast.LENGTH_SHORT).show();
+				myToast( getString(R.string.send_loc_success));
 				break;
 			case StatusID.GET_LOCINFO_SUCC:
 				
@@ -67,7 +98,7 @@ public class MainActivity extends Activity {
 				mDialog.setTitle("获取权限信息");
 				mDialog.setMessage("马上就好...");
 				mDialog.show();
-				
+				//把位置信息展示在屏幕上
 				textView1.setText(msg.obj.toString());
 				sendLocInfo(receivePath);
 				break;
@@ -76,34 +107,43 @@ public class MainActivity extends Activity {
 				String reqResult = msg.obj.toString();
 				try {
 					JSONObject jsonObject = new JSONObject(reqResult);
+					
 					int isValid = jsonObject.getInt("isvalid");
 					
 					if(StatusID.POWER_ISVALID == isValid){
-						Toast.makeText(MainActivity.this, getString(R.string.power_isvalid), Toast.LENGTH_SHORT).show();
-						//取得token
-						String token = jsonObject.getString("token");
-						//跳转到FileList页面
-						Intent toFileList = new Intent();
-						toFileList.putExtra("token",token);
-						toFileList.setClass(MainActivity.this, FileViewActivity.class);
-						startActivity(toFileList);
+						myToast( getString(R.string.power_isvalid));
 						
+						//取得token
+						tokenFromServer = jsonObject.getString("token");
+						
+						//测试
+						//textView1.setText(tokenFromServer+"\n"+tokenClientCalc);
+						
+						if(tokenClientCalc.equals(tokenFromServer)){
+							//跳转到FileList页面
+							Intent toFileList = new Intent();
+							toFileList.putExtra("token",tokenFromServer);
+							toFileList.setClass(MainActivity.this, FileViewActivity.class);
+							startActivity(toFileList);
+						}else{
+							myToast( getString(R.string.power_invalid));
+						}
 					}else{
-						Toast.makeText(MainActivity.this, getString(R.string.power_invalid), Toast.LENGTH_SHORT).show();
+						myToast( getString(R.string.power_invalid));
 					}
 				} catch (Exception e) {
 					
-					//Toast.makeText(MainActivity.this, getString(R.string.parse_json_failed), Toast.LENGTH_SHORT).show();
+					myToast( getString(R.string.parse_json_failed));
 				}
 				
 				break;
 			case StatusID.REQUEST_POWINFO_FAILED:
 				mDialog.cancel();
-				Toast.makeText(MainActivity.this, getString(R.string.send_loc_failed), Toast.LENGTH_SHORT).show();
+				myToast( getString(R.string.send_loc_failed));
 				break;
 			default:
 				mDialog.cancel();
-				Toast.makeText(MainActivity.this, "意料之外的错误", Toast.LENGTH_SHORT).show();
+				myToast( "意料之外的错误");
 			}
 		}
 		
@@ -128,7 +168,7 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				//Toast.makeText(MainActivity.this, "OnClick", Toast.LENGTH_SHORT).show();
+				//myToast( "OnClick");
 				
 				InitLocation();
 				
@@ -143,19 +183,19 @@ public class MainActivity extends Activity {
 				int res = mLocationClient.requestLocation();
 				switch(res){
 			    case 0:
-			    	Toast.makeText(MainActivity.this, "0：正常发起了定位。", Toast.LENGTH_SHORT).show();
+			    	myToast( "0：正常发起了定位。");
 			    	break;
 			    case 1:
-			    	Toast.makeText(MainActivity.this, "1：服务没有启动。", Toast.LENGTH_SHORT).show();
+			    	myToast( "1：服务没有启动。");
 			    	break;
 			    case 2:
-			    	Toast.makeText(MainActivity.this, "2：没有监听函数。", Toast.LENGTH_SHORT).show();
+			    	myToast( "2：没有监听函数。");
 			    	break;
 			    case 6:
-			    	Toast.makeText(MainActivity.this, "6：请求间隔过短。 前后两次请求定位时间间隔不能小于1000ms。", Toast.LENGTH_SHORT).show();
+			    	myToast( "6：请求间隔过短。 前后两次请求定位时间间隔不能小于1000ms。");
 			    	break;
 			    default:
-			    	Toast.makeText(MainActivity.this, "default", Toast.LENGTH_SHORT).show();
+			    	myToast( "default");
 			    	
 			    }
 			    */
@@ -251,6 +291,14 @@ public class MainActivity extends Activity {
 		            params.add(new BasicNameValuePair("satellite",""+locInfo.getSatellite()));
 		            params.add(new BasicNameValuePair("addr", locInfo.getAddr()));
 		            
+		            //md5 数据 + key 用于验证数据真实性
+		            String verifyCode = MD5.md5(locInfo.getTime()
+		            		+locInfo.getLatitude()
+		            		+locInfo.getLontitude()
+		            		+locInfo.getRadius()
+		            		+StatusID.MY_KEY);
+		            
+		            params.add(new BasicNameValuePair("verifyCode",verifyCode));
 		            
 		            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "utf-8");
 		            //3.设置POST请求数据实体
@@ -260,10 +308,20 @@ public class MainActivity extends Activity {
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){
 		                result = EntityUtils.toString(resp.getEntity(),"utf-8");
+		                
+		                tokenClientCalc = MD5.md5(locInfo.getTime()
+		                		+StatusID.MY_KEY
+		                		+locInfo.getLontitude()
+			            		+locInfo.getLatitude()			            		
+			            		+locInfo.getRadius()
+			            		+"0"
+			            		);
+		                
 		                Message msg = Message.obtain();
 				        msg.obj = result;
 						msg.what = StatusID.REQUEST_POWINFO_SUCC;
 						handler.sendMessage(msg);
+						
 		            }else{
 		            	Message msg = Message.obtain();
 						msg.what = StatusID.REQUEST_POWINFO_FAILED;
@@ -279,7 +337,13 @@ public class MainActivity extends Activity {
 			}
 			
 		}.start();	
-		
 	};
-		
+	
+	private void myToast(String msg){
+		Toast.makeText(MainActivity.this, msg,Toast.LENGTH_SHORT).show();
+	}
+	private void myToast(String msg,int duration){
+		Toast.makeText(MainActivity.this, msg,duration).show();
+	}
+	
 }

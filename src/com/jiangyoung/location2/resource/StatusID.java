@@ -2,6 +2,10 @@ package com.jiangyoung.location2.resource;
 
 public class StatusID {
 	/**
+	 * 加密私钥
+	 */
+	public final static String MY_KEY = "jiangyoungzhlocationapplication";
+	/**
 	 * 获取位置信息失败
 	 */
 	public final static int GET_LOCINFO_FAILED = 0;

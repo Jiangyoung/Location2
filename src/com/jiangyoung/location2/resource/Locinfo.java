@@ -1,4 +1,4 @@
-package com.jiangyoung.location2.utils;
+package com.jiangyoung.location2.resource;
 
 public class Locinfo {
 	private int id;
