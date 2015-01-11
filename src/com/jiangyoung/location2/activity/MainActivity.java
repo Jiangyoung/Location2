@@ -40,15 +40,14 @@ import com.jiangyoung.location2.utils.MD5;
  * 
  * 1、定位  获取位置信息
  * 2、将位置信息发送到服务器    
- *   位置信息数据+md5（位置信息数据+MY_KEY）
- *   用于确实数据来源于知道MY_KEY的地方
+ *   位置信息数据+md5（位置信息数据+ANDROID_KEY）
+ *   用于确实数据来源于知道ANDROID_KEY的地方
  *   
  *   服务器收到数据先认证 再 确认权限信息
  *   
  * 3、收到返回的 用于请求列表的 权限信息  
- *   弱有权限操作则附带返回 用于获取列表的 token
- *   token = md5（位置信息数据+MY_KEY+0）
- *   用于确实数据来源于知道MY_KEY的地方
+ *   若有权限操作则附带返回 用于获取列表的临时 token
+ *   token 为服务器生成
  * 4、若有操作权限 跳转到显示列表的Activity 并将 token 传过去
  * 
  */
@@ -74,10 +73,7 @@ public class MainActivity extends Activity {
 	 * 接收从服务器返回的认证号
 	 */
 	private String tokenFromServer = "";
-	/**
-	 * 本地计算的认证号
-	 */
-	private String tokenClientCalc = "";
+
 	/**
 	 * 用于接收线程执行返回的信息并做出对应操作
 	 */
@@ -119,15 +115,13 @@ public class MainActivity extends Activity {
 						//测试
 						//textView1.setText(tokenFromServer+"\n"+tokenClientCalc);
 						
-						if(tokenClientCalc.equals(tokenFromServer)){
-							//跳转到FileList页面
-							Intent toFileList = new Intent();
-							toFileList.putExtra("token",tokenFromServer);
-							toFileList.setClass(MainActivity.this, FileViewActivity.class);
-							startActivity(toFileList);
-						}else{
-							myToast( getString(R.string.power_invalid));
-						}
+
+						//跳转到FileList页面
+						Intent toFileList = new Intent();
+						toFileList.putExtra("token",tokenFromServer);
+						toFileList.setClass(MainActivity.this, FileViewActivity.class);
+						startActivity(toFileList);
+
 					}else{
 						myToast( getString(R.string.power_invalid));
 					}
@@ -296,7 +290,7 @@ public class MainActivity extends Activity {
 		            		+locInfo.getLatitude()
 		            		+locInfo.getLontitude()
 		            		+locInfo.getRadius()
-		            		+StatusID.MY_KEY);
+		            		+StatusID.ANDROID_KEY);
 		            
 		            params.add(new BasicNameValuePair("verifyCode",verifyCode));
 		            
@@ -307,15 +301,7 @@ public class MainActivity extends Activity {
 		            HttpResponse resp = client.execute(httpPost);
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){
-		                result = EntityUtils.toString(resp.getEntity(),"utf-8");
-		                
-		                tokenClientCalc = MD5.md5(locInfo.getTime()
-		                		+StatusID.MY_KEY
-		                		+locInfo.getLontitude()
-			            		+locInfo.getLatitude()			            		
-			            		+locInfo.getRadius()
-			            		+"0"
-			            		);
+		                result = EntityUtils.toString(resp.getEntity(),"utf-8");		                
 		                
 		                Message msg = Message.obtain();
 				        msg.obj = result;
