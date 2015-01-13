@@ -4,7 +4,7 @@ public class StatusID {
 	/**
 	 * 加密私钥
 	 */
-	public final static String ANDROID_KEY = "ANDROID-KEY-jiangyoungzhlocationapplication";
+	public final static String MY_KEY = "jiangyoungzhlocationapplication";
 	/**
 	 * 获取位置信息失败
 	 */

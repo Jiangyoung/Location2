@@ -41,17 +41,32 @@ import com.jiangyoung.location2.utils.MD5;
 
 /*
  * 
+<<<<<<< HEAD
  * 1ã€å®šä½  è·å–ä½ç½®ä¿¡æ¯
  * 2ã€å°†ä½ç½®ä¿¡æ¯å‘é€åˆ°æœåŠ¡å™¨    
  *   ä½ç½®ä¿¡æ¯æ•°æ®+md5ï¼ˆä½ç½®ä¿¡æ¯æ•°æ®+ANDROID_KEYï¼‰
  *   ç”¨äºç¡®å®æ•°æ®æ¥æºäºçŸ¥é“ANDROID_KEYçš„åœ°æ–¹
+=======
+ * 1¡¢¶¨Î»  »ñÈ¡Î»ÖÃĞÅÏ¢
+ * 2¡¢½«Î»ÖÃĞÅÏ¢·¢ËÍµ½·şÎñÆ÷    
+ *   Î»ÖÃĞÅÏ¢Êı¾İ+md5£¨Î»ÖÃĞÅÏ¢Êı¾İ+MY_KEY£©
+ *   ÓÃÓÚÈ·ÊµÊı¾İÀ´Ô´ÓÚÖªµÀMY_KEYµÄµØ·½
+>>>>>>> 7f75280fdfa32deb3f2ed2c883b45160495d7f2b
  *   
  *   æœåŠ¡å™¨æ”¶åˆ°æ•°æ®å…ˆè®¤è¯ å† ç¡®è®¤æƒé™ä¿¡æ¯
  *   
+<<<<<<< HEAD
  * 3ã€æ”¶åˆ°è¿”å›çš„ ç”¨äºè¯·æ±‚åˆ—è¡¨çš„ æƒé™ä¿¡æ¯  
  *   è‹¥æœ‰æƒé™æ“ä½œåˆ™é™„å¸¦è¿”å› ç”¨äºè·å–åˆ—è¡¨çš„ä¸´æ—¶ token
  *   token ä¸ºæœåŠ¡å™¨ç”Ÿæˆ
  * 4ã€è‹¥æœ‰æ“ä½œæƒé™ è·³è½¬åˆ°æ˜¾ç¤ºåˆ—è¡¨çš„Activity å¹¶å°† token ä¼ è¿‡å»
+=======
+ * 3¡¢ÊÕµ½·µ»ØµÄ ÓÃÓÚÇëÇóÁĞ±íµÄ È¨ÏŞĞÅÏ¢  
+ *   ÈõÓĞÈ¨ÏŞ²Ù×÷Ôò¸½´ø·µ»Ø ÓÃÓÚ»ñÈ¡ÁĞ±íµÄ token
+ *   token = md5£¨Î»ÖÃĞÅÏ¢Êı¾İ+MY_KEY+0£©
+ *   ÓÃÓÚÈ·ÊµÊı¾İÀ´Ô´ÓÚÖªµÀMY_KEYµÄµØ·½
+ * 4¡¢ÈôÓĞ²Ù×÷È¨ÏŞ Ìø×ªµ½ÏÔÊ¾ÁĞ±íµÄActivity ²¢½« token ´«¹ıÈ¥
+>>>>>>> 7f75280fdfa32deb3f2ed2c883b45160495d7f2b
  * 
  */
 
@@ -76,7 +91,10 @@ public class MainActivity extends Activity {
 	 * æ¥æ”¶ä»æœåŠ¡å™¨è¿”å›çš„è®¤è¯å·
 	 */
 	private String tokenFromServer = "";
-
+	/**
+	 * ±¾µØ¼ÆËãµÄÈÏÖ¤ºÅ
+	 */
+	private String tokenClientCalc = "";
 	/**
 	 * ç”¨äºæ¥æ”¶çº¿ç¨‹æ‰§è¡Œè¿”å›çš„ä¿¡æ¯å¹¶åšå‡ºå¯¹åº”æ“ä½œ
 	 */
@@ -118,6 +136,7 @@ public class MainActivity extends Activity {
 						//æµ‹è¯•
 						//textView1.setText(tokenFromServer+"\n"+tokenClientCalc);
 						
+<<<<<<< HEAD
 
 						//è·³è½¬åˆ°FileListé¡µé¢
 						Intent toFileList = new Intent();
@@ -125,6 +144,17 @@ public class MainActivity extends Activity {
 						toFileList.setClass(MainActivity.this, FileViewActivity.class);
 						startActivity(toFileList);
 
+=======
+						if(tokenClientCalc.equals(tokenFromServer)){
+							//Ìø×ªµ½FileListÒ³Ãæ
+							Intent toFileList = new Intent();
+							toFileList.putExtra("token",tokenFromServer);
+							toFileList.setClass(MainActivity.this, FileViewActivity.class);
+							startActivity(toFileList);
+						}else{
+							myToast( getString(R.string.power_invalid));
+						}
+>>>>>>> 7f75280fdfa32deb3f2ed2c883b45160495d7f2b
 					}else{
 						textView1.append("\nè¯¥ä½ç½®æ— è®¿é—®æƒé™");;
 						myToast( getString(R.string.power_invalid));
@@ -326,7 +356,7 @@ public class MainActivity extends Activity {
 		            		+locInfo.getLatitude()
 		            		+locInfo.getLontitude()
 		            		+locInfo.getRadius()
-		            		+StatusID.ANDROID_KEY);
+		            		+StatusID.MY_KEY);
 		            
 		            params.add(new BasicNameValuePair("verifyCode",verifyCode));
 		            
@@ -337,7 +367,15 @@ public class MainActivity extends Activity {
 		            HttpResponse resp = client.execute(httpPost);
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){
-		                result = EntityUtils.toString(resp.getEntity(),"utf-8");		                
+		                result = EntityUtils.toString(resp.getEntity(),"utf-8");
+		                
+		                tokenClientCalc = MD5.md5(locInfo.getTime()
+		                		+StatusID.MY_KEY
+		                		+locInfo.getLontitude()
+			            		+locInfo.getLatitude()			            		
+			            		+locInfo.getRadius()
+			            		+"0"
+			            		);
 		                
 		                Message msg = Message.obtain();
 				        msg.obj = result;
