@@ -23,6 +23,7 @@ import com.jiangyoung.location2.resource.ContentList;
 import com.jiangyoung.location2.resource.Dir;
 import com.jiangyoung.location2.resource.File;
 import com.jiangyoung.location2.resource.StatusID;
+import com.jiangyoung.location2.utils.Encryption;
 import com.jiangyoung.location2.utils.PullListXML;
 
 import android.app.Activity;
@@ -41,10 +42,10 @@ import android.widget.Toast;
 
 /*
  * 
- * 1¡¢½ÓÊÕ´ÓÖ÷Ò³Ãæ´«¹ıÀ´µÄtoken
- * 2¡¢Í¨¹ıtokenÇëÇóÁĞ±íĞÅÏ¢
+ * 1ã€æ¥æ”¶ä»ä¸»é¡µé¢ä¼ è¿‡æ¥çš„token
+ * 2ã€é€šè¿‡tokenè¯·æ±‚åˆ—è¡¨ä¿¡æ¯
  * 
- * 3¡¢ÊÕµ½·µ»ØµÄÁĞ±íĞÅÏ¢ ½âÎö²¢°´¸ñÊ½ÏÔÊ¾³öÀ´
+ * 3ã€æ”¶åˆ°è¿”å›çš„åˆ—è¡¨ä¿¡æ¯ è§£æå¹¶æŒ‰æ ¼å¼æ˜¾ç¤ºå‡ºæ¥
  * 
  */
 
@@ -54,7 +55,7 @@ public class FileViewActivity extends Activity {
 	private Button btn_exit;
 	private SimpleAdapter simpleAdapter;
 	
-	//ÊÊÅäÆ÷²ÎÊı
+	//é€‚é…å™¨å‚æ•°
 	private List<Map<String,Object>> list;
 	private Map<String,Object> map;
 	
@@ -63,28 +64,28 @@ public class FileViewActivity extends Activity {
 	 */
 	private ProgressDialog mDialog;
 	/**
-	 * ÈÏÖ¤ºÅ
+	 * è®¤è¯å·
 	 */
 	private String token = "";
 	/**
-	 * µ±Ç°ÒªÇëÇóµÄÄ¿Â¼Ãû
+	 * å½“å‰è¦è¯·æ±‚çš„ç›®å½•å
 	 */
 	private String requestDir = "";
 	/**
-	 * ¼ÇÂ¼Ö®Ç°ÇëÇóµÄÄ¿Â¼Ãû
+	 * è®°å½•ä¹‹å‰è¯·æ±‚çš„ç›®å½•å
 	 */
 	private String prevDir = "";
 	/**
-	 * »ñÈ¡ÁĞ±íµÄµØÖ·Á´½Ó
+	 * è·å–åˆ—è¡¨çš„åœ°å€é“¾æ¥
 	 */
 	private final String requestListPath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=5";
 	/**
-	 * °²È«ÍË³öÁ´½Ó
+	 * å®‰å…¨é€€å‡ºé“¾æ¥
 	 */
 	private final String quitPath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=6";
 	
 	/**
-	 * ÓÃÓÚ½ÓÊÕÏß³ÌÖ´ĞĞ·µ»ØµÄĞÅÏ¢²¢×ö³ö¶ÔÓ¦²Ù×÷
+	 * ç”¨äºæ¥æ”¶çº¿ç¨‹æ‰§è¡Œè¿”å›çš„ä¿¡æ¯å¹¶åšå‡ºå¯¹åº”æ“ä½œ
 	 */
 	private Handler handler = new Handler(){
 		
@@ -93,7 +94,7 @@ public class FileViewActivity extends Activity {
 			case StatusID.GET_LIST_SUCC:
 				mDialog.cancel();
 				
-				//»ñÈ¡²Ù×÷È¨ÏŞºó ¿ªÊ¼¼ÆÊ± ÏŞÖÆ²Ù×÷Ê±¼ä
+				//è·å–æ“ä½œæƒé™å å¼€å§‹è®¡æ—¶ é™åˆ¶æ“ä½œæ—¶é—´
 				new Thread(){
 					public void run() {
 						try {
@@ -107,9 +108,21 @@ public class FileViewActivity extends Activity {
 						}
 					};
 				}.start();
+				//å¯†æ–‡
+				String ciphertext = msg.obj.toString();
+				//è§£å¯†
+				Encryption encryption = new Encryption(StatusID.ANDROID_KEY, ciphertext);
 				
-				String res = msg.obj.toString();
-				//°Ñ×Ö·û´®×ª»»Îª ÊäÈëÁ÷
+				String res = "";
+				try {
+					res = encryption.replaceDecrypt();
+				} catch (Exception e) {
+					textview.append(e.getMessage());
+					
+				}
+				
+				
+				//æŠŠå­—ç¬¦ä¸²è½¬æ¢ä¸º è¾“å…¥æµ
 				InputStream is = new ByteArrayInputStream(res.getBytes());
 				
 				ContentList contentList = new ContentList();
@@ -117,13 +130,13 @@ public class FileViewActivity extends Activity {
 				try {
 					contentList = PullListXML.getContentList(is);
 					
-					textview.setText("Ä¿Â¼"+contentList.getDirNum()+"¸ö£¬ÎÄ¼ş"+contentList.getFileNum()+"¸ö.");
+					textview.setText("ç›®å½•"+contentList.getDirNum()+"ä¸ªï¼Œæ–‡ä»¶"+contentList.getFileNum()+"ä¸ª.");
 					
 					list = new ArrayList<Map<String,Object>>();	
 					if(!requestDir.isEmpty()){
 						map = new HashMap<String,Object>();						
 						map.put("name", "..");
-						map.put("info", "ÉÏ¼¶Ä¿Â¼");
+						map.put("info", "ä¸Šçº§ç›®å½•");
 						map.put("cate", "dir");
 						list.add(map);
 					}
@@ -137,7 +150,7 @@ public class FileViewActivity extends Activity {
 							dir = dirs.get(i);
 							map = new HashMap<String,Object>();
 							map.put("name", dir.getName());
-							map.put("info", "Ä¿Â¼ | "+dir.getFullName());
+							map.put("info", "ç›®å½• | "+dir.getFullName());
 							map.put("cate", "dir");
 							list.add(map);
 						}
@@ -150,20 +163,20 @@ public class FileViewActivity extends Activity {
 							file = files.get(i);
 							map = new HashMap<String,Object>();
 							map.put("name", file.getName());
-							map.put("info", "ÎÄ¼ş  |  "+(file.getLength()/1024/1024)+" M | "+file.getUploadTime());
+							map.put("info", "æ–‡ä»¶  |  "+(file.getLength()/1024/1024)+" M | "+file.getUploadTime());
 							map.put("cate", "file");
 							list.add(map);
 						}
 					}
-					//ÅäÖÃÊÊÅäÆ÷
+					//é…ç½®é€‚é…å™¨
 					simpleAdapter = new SimpleAdapter(FileViewActivity.this,list,
 							android.R.layout.simple_list_item_2,
 							new String[]{"name","info"},
 							new int[]{android.R.id.text1,
 							android.R.id.text2});					
-					//°Ñ½âÎöÍê³ÉµÄxmlÍ¨¹ı ÊÊÅäÆ÷ ·ÅÈëlistviewÖĞ
+					//æŠŠè§£æå®Œæˆçš„xmlé€šè¿‡ é€‚é…å™¨ æ”¾å…¥listviewä¸­
 					listview.setAdapter(simpleAdapter);		
-					//¶ÔlistviewÌí¼Óµã»÷ÊÂ¼ş¼àÌı
+					//å¯¹listviewæ·»åŠ ç‚¹å‡»äº‹ä»¶ç›‘å¬
 					OnItemClickListener(listview);
 					
 				} catch (Exception e) {
@@ -181,14 +194,14 @@ public class FileViewActivity extends Activity {
 				break;
 			case StatusID.ABANDON_TOKEN_FAILED:
 				mDialog.cancel();
-				myToast( "ÒâÁÏÖ®ÍâµÄ´íÎó");
+				myToast( "æ„æ–™ä¹‹å¤–çš„é”™è¯¯");
 				break;
 			case StatusID.NEED_REVALID:
 				FileViewActivity.this.finish();
 				break;
 			default:
 				mDialog.cancel();
-				myToast( "ÒâÁÏÖ®ÍâµÄ´íÎó");
+				myToast( "æ„æ–™ä¹‹å¤–çš„é”™è¯¯");
 			}
 		};
 	};
@@ -221,26 +234,26 @@ public class FileViewActivity extends Activity {
 
 	private void abandonToken() {
 		mDialog = new ProgressDialog(FileViewActivity.this);
-		mDialog.setTitle("»ñÈ¡ÁĞ±íĞÅÏ¢");
-		mDialog.setMessage("ÂíÉÏ¾ÍºÃ...");
+		mDialog.setTitle("è·å–åˆ—è¡¨ä¿¡æ¯");
+		mDialog.setMessage("é©¬ä¸Šå°±å¥½...");
 		mDialog.show();
 		new Thread(){			
 			public void run(){
 				try {
 					String result = "";
-			        //1»ñÈ¡µ½Ò»¸öä¯ÀÀÆ÷
+			        //1è·å–åˆ°ä¸€ä¸ªæµè§ˆå™¨
 			        HttpClient client = new DefaultHttpClient();
 
-			        //2.×¼±¸ÒªÇëÇóµÄÊı¾İÀàĞÍ
+			        //2.å‡†å¤‡è¦è¯·æ±‚çš„æ•°æ®ç±»å‹
 			        HttpPost httpPost = new HttpPost(quitPath);
 
-		            //¼üÖµ¶Ô  NameValuePair
+		            //é”®å€¼å¯¹  NameValuePair
 		            List<NameValuePair> params = new ArrayList<NameValuePair>();
 		            
 		            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "utf-8");
-		            //3.ÉèÖÃPOSTÇëÇóÊı¾İÊµÌå
+		            //3.è®¾ç½®POSTè¯·æ±‚æ•°æ®å®ä½“
 		            httpPost.setEntity(entity);
-		            //4.·¢ËÍÊı¾İ¸ø·şÎñÆ÷
+		            //4.å‘é€æ•°æ®ç»™æœåŠ¡å™¨
 		            HttpResponse resp = client.execute(httpPost);
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){
@@ -267,29 +280,29 @@ public class FileViewActivity extends Activity {
 
 	private void requestListContent() {
 		mDialog = new ProgressDialog(FileViewActivity.this);
-		mDialog.setTitle("»ñÈ¡ÁĞ±íĞÅÏ¢");
-		mDialog.setMessage("ÂíÉÏ¾ÍºÃ...");
+		mDialog.setTitle("è·å–åˆ—è¡¨ä¿¡æ¯");
+		mDialog.setMessage("é©¬ä¸Šå°±å¥½...");
 		mDialog.show();
 		new Thread(){			
 			public void run(){
 				try {
 					String result = "";
-			        //1»ñÈ¡µ½Ò»¸öä¯ÀÀÆ÷
+			        //1è·å–åˆ°ä¸€ä¸ªæµè§ˆå™¨
 			        HttpClient client = new DefaultHttpClient();
 
-			        //2.×¼±¸ÒªÇëÇóµÄÊı¾İÀàĞÍ
+			        //2.å‡†å¤‡è¦è¯·æ±‚çš„æ•°æ®ç±»å‹
 			        HttpPost httpPost = new HttpPost(requestListPath);
 
-		            //¼üÖµ¶Ô  NameValuePair
+		            //é”®å€¼å¯¹  NameValuePair
 		            List<NameValuePair> params = new ArrayList<NameValuePair>();
 		            
 		            params.add(new BasicNameValuePair("token",token));
 		            params.add(new BasicNameValuePair("dir",requestDir));
 		            
 		            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "utf-8");
-		            //3.ÉèÖÃPOSTÇëÇóÊı¾İÊµÌå
+		            //3.è®¾ç½®POSTè¯·æ±‚æ•°æ®å®ä½“
 		            httpPost.setEntity(entity);
-		            //4.·¢ËÍÊı¾İ¸ø·şÎñÆ÷
+		            //4.å‘é€æ•°æ®ç»™æœåŠ¡å™¨
 		            HttpResponse resp = client.execute(httpPost);
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){
@@ -322,20 +335,20 @@ public class FileViewActivity extends Activity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 
-				//È¡µÃ¶ÔÓ¦mapÖĞµÄÖµ Àı {cate=file,info=xxx,name=pic}
+				//å–å¾—å¯¹åº”mapä¸­çš„å€¼ ä¾‹ {cate=file,info=xxx,name=pic}
 				String itemInfoString = arg0.getAdapter().getItem(arg2).toString();
-				//Í¨¹ı , ½ØÈ¡³ÉÊı×é
-				//arr[0] ="{cate=file"   arr[1] ="info=ÎÄ¼ş | xxx"     arr[2] ="name=pic}"
+				//é€šè¿‡ , æˆªå–æˆæ•°ç»„
+				//arr[0] ="{cate=file"   arr[1] ="info=æ–‡ä»¶ | xxx"     arr[2] ="name=pic}"
 				String[] itemInfoArr = itemInfoString.split(",");
 				
 				String cate = itemInfoArr[0].substring(itemInfoArr[0].indexOf("=")+1);
 				
 				if(cate.equals("dir")){
 					
-					//´Ó×Ö·û´®½ØÈ¡³ö dirName  
+					//ä»å­—ç¬¦ä¸²æˆªå–å‡º dirName  
 					String dirName = itemInfoArr[2].substring(itemInfoArr[2].indexOf("=")+1,itemInfoArr[2].indexOf("}"));
 					
-					//  .. ÒâÎª·µ»ØÉÏ²ãÄ¿Â¼     ÓëÄ¿Â¼Í¬ÀàĞÍ
+					//  .. æ„ä¸ºè¿”å›ä¸Šå±‚ç›®å½•     ä¸ç›®å½•åŒç±»å‹
 					if(dirName.equals("..")){
 						try{
 							requestDir = prevDir.substring(0, prevDir.indexOf("/"));
@@ -344,7 +357,7 @@ public class FileViewActivity extends Activity {
 						}
 						
 					}else{
-						// eg: itemInfoArr[1] = "info=Ä¿Â¼ | dirName1/dirName2/";
+						// eg: itemInfoArr[1] = "info=ç›®å½• | dirName1/dirName2/";
 						requestDir = itemInfoArr[1].substring(itemInfoArr[1].indexOf("|")+2);
 						
 						requestDir = requestDir.substring(0,requestDir.length()-1);
@@ -357,7 +370,7 @@ public class FileViewActivity extends Activity {
 					//Intent toDownFile = new Intent();
 					myToast("cooming soon.");
 				}else{
-					myToast("Î´Ê¶±ğ");
+					myToast("æœªè¯†åˆ«");
 				}
 				
 			}

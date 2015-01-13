@@ -1,6 +1,7 @@
 package com.jiangyoung.location2.activity;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -32,23 +34,24 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
 import com.jiangyoung.location2.R;
 import com.jiangyoung.location2.resource.*;
+import com.jiangyoung.location2.utils.Encryption;
 import com.jiangyoung.location2.utils.MD5;
 
 
 
 /*
  * 
- * 1¡¢¶¨Î»  »ñÈ¡Î»ÖÃĞÅÏ¢
- * 2¡¢½«Î»ÖÃĞÅÏ¢·¢ËÍµ½·şÎñÆ÷    
- *   Î»ÖÃĞÅÏ¢Êı¾İ+md5£¨Î»ÖÃĞÅÏ¢Êı¾İ+ANDROID_KEY£©
- *   ÓÃÓÚÈ·ÊµÊı¾İÀ´Ô´ÓÚÖªµÀANDROID_KEYµÄµØ·½
+ * 1ã€å®šä½  è·å–ä½ç½®ä¿¡æ¯
+ * 2ã€å°†ä½ç½®ä¿¡æ¯å‘é€åˆ°æœåŠ¡å™¨    
+ *   ä½ç½®ä¿¡æ¯æ•°æ®+md5ï¼ˆä½ç½®ä¿¡æ¯æ•°æ®+ANDROID_KEYï¼‰
+ *   ç”¨äºç¡®å®æ•°æ®æ¥æºäºçŸ¥é“ANDROID_KEYçš„åœ°æ–¹
  *   
- *   ·şÎñÆ÷ÊÕµ½Êı¾İÏÈÈÏÖ¤ ÔÙ È·ÈÏÈ¨ÏŞĞÅÏ¢
+ *   æœåŠ¡å™¨æ”¶åˆ°æ•°æ®å…ˆè®¤è¯ å† ç¡®è®¤æƒé™ä¿¡æ¯
  *   
- * 3¡¢ÊÕµ½·µ»ØµÄ ÓÃÓÚÇëÇóÁĞ±íµÄ È¨ÏŞĞÅÏ¢  
- *   ÈôÓĞÈ¨ÏŞ²Ù×÷Ôò¸½´ø·µ»Ø ÓÃÓÚ»ñÈ¡ÁĞ±íµÄÁÙÊ± token
- *   token Îª·şÎñÆ÷Éú³É
- * 4¡¢ÈôÓĞ²Ù×÷È¨ÏŞ Ìø×ªµ½ÏÔÊ¾ÁĞ±íµÄActivity ²¢½« token ´«¹ıÈ¥
+ * 3ã€æ”¶åˆ°è¿”å›çš„ ç”¨äºè¯·æ±‚åˆ—è¡¨çš„ æƒé™ä¿¡æ¯  
+ *   è‹¥æœ‰æƒé™æ“ä½œåˆ™é™„å¸¦è¿”å› ç”¨äºè·å–åˆ—è¡¨çš„ä¸´æ—¶ token
+ *   token ä¸ºæœåŠ¡å™¨ç”Ÿæˆ
+ * 4ã€è‹¥æœ‰æ“ä½œæƒé™ è·³è½¬åˆ°æ˜¾ç¤ºåˆ—è¡¨çš„Activity å¹¶å°† token ä¼ è¿‡å»
  * 
  */
 
@@ -58,7 +61,7 @@ public class MainActivity extends Activity {
 	public LocationClient mLocationClient = null;
 	public BDLocationListener myListener = new MyLocationListener();
 	/**
-	 * ÉÏ´«Î»ÖÃĞÅÏ¢µØÖ·Á´½Ó
+	 * ä¸Šä¼ ä½ç½®ä¿¡æ¯åœ°å€é“¾æ¥
 	 */
 	private String receivePath = "http://1.jiangyounglocation.sinaapp.com/location.php?case=1";
 	
@@ -70,12 +73,12 @@ public class MainActivity extends Activity {
 	private TextView textView1;
 	
 	/**
-	 * ½ÓÊÕ´Ó·şÎñÆ÷·µ»ØµÄÈÏÖ¤ºÅ
+	 * æ¥æ”¶ä»æœåŠ¡å™¨è¿”å›çš„è®¤è¯å·
 	 */
 	private String tokenFromServer = "";
 
 	/**
-	 * ÓÃÓÚ½ÓÊÕÏß³ÌÖ´ĞĞ·µ»ØµÄĞÅÏ¢²¢×ö³ö¶ÔÓ¦²Ù×÷
+	 * ç”¨äºæ¥æ”¶çº¿ç¨‹æ‰§è¡Œè¿”å›çš„ä¿¡æ¯å¹¶åšå‡ºå¯¹åº”æ“ä½œ
 	 */
 	private Handler handler = new Handler(){
 		public void handleMessage(android.os.Message msg) {
@@ -88,13 +91,13 @@ public class MainActivity extends Activity {
 			case StatusID.GET_LOCINFO_SUCC:
 				
 				mDialog.cancel();
-				//Í£Ö¹¶¨Î»
+				//åœæ­¢å®šä½
 				mLocationClient.stop();
 				
-				mDialog.setTitle("»ñÈ¡È¨ÏŞĞÅÏ¢");
-				mDialog.setMessage("ÂíÉÏ¾ÍºÃ...");
+				mDialog.setTitle("è·å–æƒé™ä¿¡æ¯");
+				mDialog.setMessage("é©¬ä¸Šå°±å¥½...");
 				mDialog.show();
-				//°ÑÎ»ÖÃĞÅÏ¢Õ¹Ê¾ÔÚÆÁÄ»ÉÏ
+				//æŠŠä½ç½®ä¿¡æ¯å±•ç¤ºåœ¨å±å¹•ä¸Š
 				textView1.setText(msg.obj.toString());
 				sendLocInfo(receivePath);
 				break;
@@ -109,20 +112,21 @@ public class MainActivity extends Activity {
 					if(StatusID.POWER_ISVALID == isValid){
 						myToast( getString(R.string.power_isvalid));
 						
-						//È¡µÃtoken
+						//å–å¾—token
 						tokenFromServer = jsonObject.getString("token");
 						
-						//²âÊÔ
+						//æµ‹è¯•
 						//textView1.setText(tokenFromServer+"\n"+tokenClientCalc);
 						
 
-						//Ìø×ªµ½FileListÒ³Ãæ
+						//è·³è½¬åˆ°FileListé¡µé¢
 						Intent toFileList = new Intent();
 						toFileList.putExtra("token",tokenFromServer);
 						toFileList.setClass(MainActivity.this, FileViewActivity.class);
 						startActivity(toFileList);
 
 					}else{
+						textView1.append("\nè¯¥ä½ç½®æ— è®¿é—®æƒé™");;
 						myToast( getString(R.string.power_invalid));
 					}
 				} catch (Exception e) {
@@ -137,7 +141,7 @@ public class MainActivity extends Activity {
 				break;
 			default:
 				mDialog.cancel();
-				myToast( "ÒâÁÏÖ®ÍâµÄ´íÎó");
+				myToast( "æ„æ–™ä¹‹å¤–çš„é”™è¯¯");
 			}
 		}
 		
@@ -148,16 +152,46 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		mLocationClient = new LocationClient(getApplicationContext());     //ÉùÃ÷LocationClientÀà
-	    mLocationClient.registerLocationListener( myListener );    //×¢²á¼àÌıº¯Êı
+		mLocationClient = new LocationClient(getApplicationContext());     //å£°æ˜LocationClientç±»
+	    mLocationClient.registerLocationListener( myListener );    //æ³¨å†Œç›‘å¬å‡½æ•°
 		
 	    startCheck = (Button)findViewById(R.id.checkpower);
 
-		//ÊµÀı»¯×ø±êÊı¾İ
+		//å®ä¾‹åŒ–åæ ‡æ•°æ®
 	    locInfo = new Locinfo();
 	    
 	    textView1 = (TextView)findViewById(R.id.textView1);
-	        
+	    
+	    
+/*
+ * 
+ 
+	    //String cleartext = "abcdefghijklmnopqrstuvwxyz !@#$^^%&(**)_++_(*()*(&*^&^$$%%^^&/music/G.E.M. é‚“ç´«æ£‹ - A.I.N.Y.(liveç‰ˆ).mp3<";
+	    //String cleartext = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><contentList><dirNum>3</dirNum><fileNum>1</fileNum><dirs><dir><dirName>music</dirName><dirFullName>music/</dirFullName></dir><dir><dirName>pic</dirName><dirFullName>pic/</dirFullName></dir><dir><dirName>testDir1</dirName><dirFullName>testDir1/</dirFullName></dir></dirs><files><file><fileName>README.txt</fileName><fileFullName>README.txt</fileFullName><fileCDNUrl>http://jiangyounglocation-locdomain.stor.sinaapp.com/README.txt</fileCDNUrl><fileLength>14</fileLength><fileUploadTime>1420774306</fileUploadTime></file></files></contentList>";
+	    String cleartext = "2";
+	    Encryption encryption = new Encryption(StatusID.ANDROID_KEY,cleartext);
+	    
+	    String ciphertext = "";
+		try {
+			ciphertext = encryption.replaceEncrypt();
+		} catch (Exception e) {
+			textView1.setText(e.getMessage());
+		}
+	    
+	    textView1.setText(ciphertext);
+	    
+	    encryption.setText(ciphertext);
+	    
+	    String result = "";
+	    try{
+	    	result = encryption.replaceDecrypt();
+	    }catch(Exception e){
+	    	result = e.getMessage();
+	    }
+	    
+	    textView1.append("\n--------\n"+result);
+*/
+	    
 	    startCheck.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -167,8 +201,8 @@ public class MainActivity extends Activity {
 				InitLocation();
 				
 				mDialog = new ProgressDialog(MainActivity.this);
-				mDialog.setTitle("»ñÈ¡Î»ÖÃĞÅÏ¢");
-				mDialog.setMessage("ÂíÉÏ¾ÍºÃ...");
+				mDialog.setTitle("è·å–ä½ç½®ä¿¡æ¯");
+				mDialog.setMessage("é©¬ä¸Šå°±å¥½...");
 				mDialog.show();
 				
 				mLocationClient.start();				
@@ -177,16 +211,16 @@ public class MainActivity extends Activity {
 				int res = mLocationClient.requestLocation();
 				switch(res){
 			    case 0:
-			    	myToast( "0£ºÕı³£·¢ÆğÁË¶¨Î»¡£");
+			    	myToast( "0ï¼šæ­£å¸¸å‘èµ·äº†å®šä½ã€‚");
 			    	break;
 			    case 1:
-			    	myToast( "1£º·şÎñÃ»ÓĞÆô¶¯¡£");
+			    	myToast( "1ï¼šæœåŠ¡æ²¡æœ‰å¯åŠ¨ã€‚");
 			    	break;
 			    case 2:
-			    	myToast( "2£ºÃ»ÓĞ¼àÌıº¯Êı¡£");
+			    	myToast( "2ï¼šæ²¡æœ‰ç›‘å¬å‡½æ•°ã€‚");
 			    	break;
 			    case 6:
-			    	myToast( "6£ºÇëÇó¼ä¸ô¹ı¶Ì¡£ Ç°ºóÁ½´ÎÇëÇó¶¨Î»Ê±¼ä¼ä¸ô²»ÄÜĞ¡ÓÚ1000ms¡£");
+			    	myToast( "6ï¼šè¯·æ±‚é—´éš”è¿‡çŸ­ã€‚ å‰åä¸¤æ¬¡è¯·æ±‚å®šä½æ—¶é—´é—´éš”ä¸èƒ½å°äº1000msã€‚");
 			    	break;
 			    default:
 			    	myToast( "default");
@@ -206,6 +240,8 @@ public class MainActivity extends Activity {
 			if (location == null)
 		            return ;
 			StringBuffer sb = new StringBuffer(256);
+			
+			sb.append("LocationInfo : \n");
 			sb.append("time : ");
 			sb.append(location.getTime());
 			locInfo.setTime(location.getTime());
@@ -250,15 +286,15 @@ public class MainActivity extends Activity {
 	
 	private void InitLocation(){
 		LocationClientOption option = new LocationClientOption();
-		option.setLocationMode(LocationMode.Hight_Accuracy);//ÉèÖÃ¶¨Î»Ä£Ê½
-		option.setCoorType("bd09ll");//·µ»ØµÄ¶¨Î»½á¹ûÊÇ°Ù¶È¾­Î³¶È
+		option.setLocationMode(LocationMode.Hight_Accuracy);//è®¾ç½®å®šä½æ¨¡å¼
+		option.setCoorType("bd09ll");//è¿”å›çš„å®šä½ç»“æœæ˜¯ç™¾åº¦ç»çº¬åº¦
 		int span=5000;
-		option.setScanSpan(span);//ÉèÖÃ·¢Æğ¶¨Î»ÇëÇóµÄ¼ä¸ôÊ±¼äÎª5000ms
+		option.setScanSpan(span);//è®¾ç½®å‘èµ·å®šä½è¯·æ±‚çš„é—´éš”æ—¶é—´ä¸º5000ms
 		
 		mLocationClient.setLocOption(option);
 	}
 	/**
-	 * Ïò·şÎñÆ÷·¢ËÍÎ»ÖÃĞÅÏ¢
+	 * å‘æœåŠ¡å™¨å‘é€ä½ç½®ä¿¡æ¯
 	 */
 	private void sendLocInfo(final String path) {
 		
@@ -266,13 +302,13 @@ public class MainActivity extends Activity {
 			public void run(){
 				try {
 					String result = "";
-			        //1»ñÈ¡µ½Ò»¸öä¯ÀÀÆ÷
+			        //1è·å–åˆ°ä¸€ä¸ªæµè§ˆå™¨
 			        HttpClient client = new DefaultHttpClient();
 
-			        //2.×¼±¸ÒªÇëÇóµÄÊı¾İÀàĞÍ
+			        //2.å‡†å¤‡è¦è¯·æ±‚çš„æ•°æ®ç±»å‹
 			        HttpPost httpPost = new HttpPost(path);
 
-		            //¼üÖµ¶Ô  NameValuePair
+		            //é”®å€¼å¯¹  NameValuePair
 		            List<NameValuePair> params = new ArrayList<NameValuePair>();
 		            
 		            
@@ -285,7 +321,7 @@ public class MainActivity extends Activity {
 		            params.add(new BasicNameValuePair("satellite",""+locInfo.getSatellite()));
 		            params.add(new BasicNameValuePair("addr", locInfo.getAddr()));
 		            
-		            //md5 Êı¾İ + key ÓÃÓÚÑéÖ¤Êı¾İÕæÊµĞÔ
+		            //md5 æ•°æ® + key ç”¨äºéªŒè¯æ•°æ®çœŸå®æ€§
 		            String verifyCode = MD5.md5(locInfo.getTime()
 		            		+locInfo.getLatitude()
 		            		+locInfo.getLontitude()
@@ -295,9 +331,9 @@ public class MainActivity extends Activity {
 		            params.add(new BasicNameValuePair("verifyCode",verifyCode));
 		            
 		            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "utf-8");
-		            //3.ÉèÖÃPOSTÇëÇóÊı¾İÊµÌå
+		            //3.è®¾ç½®POSTè¯·æ±‚æ•°æ®å®ä½“
 		            httpPost.setEntity(entity);
-		            //4.·¢ËÍÊı¾İ¸ø·şÎñÆ÷
+		            //4.å‘é€æ•°æ®ç»™æœåŠ¡å™¨
 		            HttpResponse resp = client.execute(httpPost);
 		            int code = resp.getStatusLine().getStatusCode();
 		            if(code==200){

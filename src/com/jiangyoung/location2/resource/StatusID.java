@@ -2,63 +2,63 @@ package com.jiangyoung.location2.resource;
 
 public class StatusID {
 	/**
-	 * ¼ÓÃÜË½Ô¿
+	 * åŠ å¯†ç§é’¥
 	 */
 	public final static String ANDROID_KEY = "ANDROID-KEY-jiangyoungzhlocationapplication";
 	/**
-	 * »ñÈ¡Î»ÖÃĞÅÏ¢Ê§°Ü
+	 * è·å–ä½ç½®ä¿¡æ¯å¤±è´¥
 	 */
 	public final static int GET_LOCINFO_FAILED = 0;
 	/**
-	 * ³É¹¦È¡µÃÎ»ÖÃĞÅÏ¢
+	 * æˆåŠŸå–å¾—ä½ç½®ä¿¡æ¯
 	 */
 	public final static int GET_LOCINFO_SUCC = 1;
 	/**
-	 * È¨ÏŞĞÅÏ¢ÇëÇó³É¹¦
+	 * æƒé™ä¿¡æ¯è¯·æ±‚æˆåŠŸ
 	 */
 	public final static int REQUEST_POWINFO_SUCC = 2;
 	/**
-	 * È¨ÏŞĞÅÏ¢ÇëÇóÊ§°Ü
+	 * æƒé™ä¿¡æ¯è¯·æ±‚å¤±è´¥
 	 */
 	public final static int REQUEST_POWINFO_FAILED = 3;
 	/**
-	 * È¨ÏŞĞÅÏ¢ÑéÖ¤Ê§°Ü
+	 * æƒé™ä¿¡æ¯éªŒè¯å¤±è´¥
 	 */
 	public final static int VERIFY_POWINFO_SUCC = 4;
 	/**
-	 * È¨ÏŞĞÅÏ¢ÑéÖ¤³É¹¦	
+	 * æƒé™ä¿¡æ¯éªŒè¯æˆåŠŸ	
 	 */
 	public final static int VERIFY_POWINFO_FAILED =5;
 	/**
-	 * ÓĞ²Ù×÷È¨ÏŞ
+	 * æœ‰æ“ä½œæƒé™
 	 */
 	public final static int POWER_ISVALID = 6;
 	/**
-	 * ÎŞ²Ù×÷È¨ÏŞ
+	 * æ— æ“ä½œæƒé™
 	 */
 	public final static int POWER_INVALID = 7;
 	/**
-	 * »ñÈ¡ÁĞ±í³É¹¦
+	 * è·å–åˆ—è¡¨æˆåŠŸ
 	 */
 	public final static int GET_LIST_SUCC =8;
 	/**
-	 * »ñÈ¡ÁĞ±íÊ§°Ü
+	 * è·å–åˆ—è¡¨å¤±è´¥
 	 */
 	public final static int GET_LIST_FAILED =9;
 	/**
-	 * ³É¹¦Ê¹tokenÊ§Ğ§
+	 * æˆåŠŸä½¿tokenå¤±æ•ˆ
 	 */
 	public final static int ABANDON_TOKEN_SUCC = 10;
 	/**
-	 * Ê¹tokenÊ§Ğ§Ê§°Ü
+	 * ä½¿tokenå¤±æ•ˆå¤±è´¥
 	 */
 	public final static int ABANDON_TOKEN_FAILED = 11;
 	/**
-	 * ĞèÒªÖØĞÂÈÏÖ¤
+	 * éœ€è¦é‡æ–°è®¤è¯
 	 */
 	public final static int NEED_REVALID = 12;
 	/**
-	 * ÈÏÖ¤ÓĞĞ§Ê±¼ä  ms
+	 * è®¤è¯æœ‰æ•ˆæ—¶é—´  ms
 	 */
 	public final static long PERIOD_VALID = 20000;
 
